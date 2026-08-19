@@ -147,9 +147,3 @@ router.post("/:id/comments", async (req, res) => {
 });
 
 module.exports = router;
-
-// TEMPORARY: seeded violation to prove CI gate blocks new SQLi
-router.get("/scratch-test", async (req, res) => {
-  const bad = `SELECT * FROM comments WHERE body ILIKE '%${req.query.x}%'`;
-  res.json(await pool.query(bad));
-});
