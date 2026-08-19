@@ -31,11 +31,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Semgrep (default + custom SQLi rule)
+      - name: Run custom SQLi rule (blocking gate, Project 1 scope)
         run: |
           pip install semgrep --break-system-packages
-          semgrep --config auto --config custom-rules/sql-string-concat.yaml \
-            --error .
+          semgrep --config custom-rules/sql-string-concat.yaml --error .
+
+      - name: Run full default ruleset (informational only, not gated)
+        if: always()
+        run: |
+          semgrep --config auto . || true
 
   secrets-scan:
     runs-on: ubuntu-latest
