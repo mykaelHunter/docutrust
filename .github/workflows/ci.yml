@@ -24,6 +24,31 @@ jobs:
       - name: Build image
         run: docker build -t docutrust:ci-${{ github.sha }} .
 
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Semgrep (default + custom SQLi rule)
+        run: |
+          pip install semgrep --break-system-packages
+          semgrep --config auto --config custom-rules/sql-string-concat.yaml \
+            --error .
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks (no allowlist, catches known-placeholder-shaped secrets too)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: gitleaks-custom.toml
+
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
   # DevSecOps project in this track adds its own real stage here, SAST

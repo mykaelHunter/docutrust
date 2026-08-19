@@ -32,18 +32,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM documents WHERE id = $1", [req.params.id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Not found" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(503).json({ error: "Database unavailable" });
-  }
-});
-
 /**
  * SEEDED FINDING for Project 1 (SAST) and Project 3 (DAST): the query
  * below is built with raw string concatenation instead of a
@@ -57,6 +45,11 @@ router.get("/:id", async (req, res) => {
  * parseSearchQuery() from lib/searchQuery.js, Project 7's fuzz target,
  * documented there. One endpoint, three different testing
  * methodologies (SAST, DAST, fuzzing), three different real findings.
+ *
+ * NOTE: this route is intentionally declared ABOVE `/:id` below. Express
+ * matches routes in declaration order, and `/:id` would otherwise treat
+ * the literal path segment "search" as an :id value, sending it into a
+ * query that expects an integer and breaking this endpoint entirely.
  */
 router.get("/search", async (req, res) => {
   const q = req.query.q || "";
@@ -71,11 +64,25 @@ router.get("/search", async (req, res) => {
   const searchTerm = tokens.map((t) => t.value).join(" ");
 
   try {
-    // VULNERABLE ON PURPOSE, see comment above. Do not "fix" this
-    // without it being Project 1 or Project 3's documented deliverable.
-    const query = `SELECT id, title FROM documents WHERE title ILIKE '%${searchTerm}%'`;
-    const result = await pool.query(query);
+    // FIXED (Project 1 deliverable): parameterized query, no string
+    // interpolation of user input into SQL. Postgres substitutes $1
+    // safely; the ILIKE wildcards are applied to the bound value, not
+    // to the query text itself.
+    const query = "SELECT id, title FROM documents WHERE title ILIKE $1";
+    const result = await pool.query(query, [`%${searchTerm}%`]);
     res.json(result.rows);
+  } catch (err) {
+    res.status(503).json({ error: "Database unavailable" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM documents WHERE id = $1", [req.params.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Not found" });
+    }
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(503).json({ error: "Database unavailable" });
   }
@@ -88,6 +95,20 @@ router.get("/search", async (req, res) => {
  * response, a textbook reflected/stored XSS, deliberately left this
  * way for the same reason as the search endpoint above.
  */
+/**
+ * FIXED (Project 1 deliverable): minimal HTML-escaping helper. Escapes
+ * the five characters that matter for breaking out of HTML text
+ * content/attributes. No new dependency added for a one-function need.
+ */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 router.get("/:id/render", async (req, res) => {
   try {
     const result = await pool.query("SELECT title, body FROM documents WHERE id = $1", [
@@ -98,10 +119,11 @@ router.get("/:id/render", async (req, res) => {
     }
     const { title, body } = result.rows[0];
 
-    // VULNERABLE ON PURPOSE: no escaping applied to `title` or `body`
-    // before interpolating into HTML.
+    // FIXED (Project 1 deliverable): title/body are escaped before
+    // being interpolated into HTML, so a stored <script> tag renders
+    // as inert text instead of executing.
     res.set("Content-Type", "text/html");
-    res.send(`<html><body><h1>${title}</h1><p>${body}</p></body></html>`);
+    res.send(`<html><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(body)}</p></body></html>`);
   } catch (err) {
     res.status(503).json({ error: "Database unavailable" });
   }
