@@ -1,0 +1,23 @@
+rules:
+  - id: sql-string-concat-injection
+    languages: [javascript]
+    severity: ERROR
+    message: >
+      SQL query string appears to be built via template-literal
+      interpolation or string concatenation instead of a parameterized
+      query. This can allow SQL injection if any part of the query
+      derives from user input. Use parameterized placeholders
+      ($1, $2, ...) and pass values via the query's parameter array,
+      e.g. pool.query("SELECT ... WHERE id = $1", [id]).
+    patterns:
+      - pattern: $LHS = $RHS
+      - metavariable-pattern:
+          metavariable: $RHS
+          patterns:
+            - pattern-either:
+                - pattern: |
+                    `...${$X}...`
+                - pattern: '"..." + $X + "..."'
+      - metavariable-regex:
+          metavariable: $RHS
+          regex: (?is)^.*(select|insert|update|delete)

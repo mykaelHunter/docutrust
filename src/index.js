@@ -1,3 +1,4 @@
+require("dotenv").config({ path: ".env.local" });
 const express = require("express");
 const { pool } = require("./db");
 const documentsRouter = require("./routes/documents");

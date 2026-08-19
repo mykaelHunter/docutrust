@@ -1,0 +1,96 @@
+                   
+                   
+┌─────────────────┐
+│ 8 Code Findings │
+└─────────────────┘
+                                           
+  [36m[22m[24m  .github/workflows/ci.yml[0m
+    ❯❱ yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          GitHub Actions step uses a mutable tag or branch reference. Tags and branch names can be silently   
+          repointed by the action owner, enabling supply-chain attacks — as seen in the trivy-action and kics-
+          github-action compromises. Pin the reference to a full 40-character commit SHA instead, e.g. `uses: 
+          actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608`.                                         
+          Details: https://sg.run/2LgAL                                                                       
+                                                                                                              
+           12┆ - uses: actions/checkout@v4
+            ⋮┆----------------------------------------
+           17┆ uses: actions/setup-node@v4
+                                
+  [36m[22m[24m  k8s/base.yaml[0m
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           30┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.allow-privilege-escalation-no-securitycontext.allow-privilege-escalation-no-
+       securitycontext                                                                                      
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          In Kubernetes, each pod runs in its own isolated environment with its own set of security policies. 
+          However, certain container images may contain `setuid` or `setgid` binaries that could allow an     
+          attacker to perform privilege escalation and gain access to sensitive resources. To mitigate this   
+          risk, it's recommended to add a `securityContext` to the container in the pod, with the parameter   
+          `allowPrivilegeEscalation` set to `false`. This will prevent the container from running any         
+          privileged processes and limit the impact of any potential attacks. By adding a `securityContext` to
+          your Kubernetes pod, you can help to ensure that your containerized applications are more secure and
+          less vulnerable to privilege escalation attacks.                                                    
+          Details: https://sg.run/eleR                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ securityContext: allowPrivilegeEscalation: false name
+           32┆ - name: postgres
+   
+    ❯❱ yaml.kubernetes.security.allow-privilege-escalation.allow-privilege-escalation
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          In Kubernetes, each pod runs in its own isolated environment with its own set of security policies. 
+          However, certain container images may contain `setuid` or `setgid` binaries that could allow an     
+          attacker to perform privilege escalation and gain access to sensitive resources. To mitigate this   
+          risk, it's recommended to add a `securityContext` to the container in the pod, with the parameter   
+          `allowPrivilegeEscalation` set to `false`. This will prevent the container from running any         
+          privileged processes and limit the impact of any potential attacks. By adding the                   
+          `allowPrivilegeEscalation` parameter to your the `securityContext`, you can help to ensure that your
+          containerized applications are more secure and less vulnerable to privilege escalation attacks.     
+          Details: https://sg.run/ljp6                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ securityContext: allowPrivilegeEscalation: false #
+           86┆ securityContext:
+                               
+  [36m[22m[24m  src/index.js[0m
+     ❱ javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          A CSRF middleware was not detected in your express application. Ensure you are either using one such
+          as `csurf` or `csrf` (see rule references) and/or you are properly doing CSRF validation in your    
+          routes with a token or cookies.                                                                     
+          Details: https://sg.run/BxzR                                                                        
+                                                                                                              
+            5┆ const app = express();
+                                 
+  [36m[22m[24m  src/migrate.js[0m
+     ❱ javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Detected string concatenation with a non-literal variable in a util.format / console.log function.
+          If an attacker injects a format specifier in the string, it will forge the log message. Try to use
+          constant values for the format string.                                                            
+          Details: https://sg.run/7Y5R                                                                      
+                                                                                                            
+           35┆ console.error(`Migration ${file} failed:`, err.message);
+                                          
+  [36m[22m[24m  src/routes/documents.js[0m
+    ❯❱ javascript.express.security.injection.raw-html-format.raw-html-format
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          User data flows into the host portion of this manually-constructed HTML. This can introduce a Cross-
+          Site-Scripting (XSS) vulnerability if this comes from user-provided input. Consider using a         
+          sanitization library such as DOMPurify to sanitize the HTML within.                                 
+          Details: https://sg.run/5DO3                                                                        
+                                                                                                              
+          104┆ res.send(`<html><body><h1>${title}</h1><p>${body}</p></body></html>`);
+
