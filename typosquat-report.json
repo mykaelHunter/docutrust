@@ -1,0 +1,100 @@
+{
+  "express": {
+    "variants_checked": 37,
+    "published_lookalikes_found": [
+      "epress",
+      "epxress",
+      "experss",
+      "expess",
+      "expres",
+      "expressa",
+      "expressd",
+      "expresse",
+      "expressi",
+      "expressj",
+      "expresso",
+      "expressq",
+      "expressr",
+      "expresss",
+      "expresst",
+      "expressv",
+      "expressx",
+      "expressy",
+      "exprses",
+      "exprss",
+      "exress",
+      "exrpess",
+      "xepress",
+      "xpress"
+    ],
+    "present_in_our_lockfile": []
+  },
+  "lodash": {
+    "variants_checked": 37,
+    "published_lookalikes_found": [
+      "ldash",
+      "ldoash",
+      "loadsh",
+      "loash",
+      "lodah",
+      "lodahs",
+      "lodas",
+      "lodashh",
+      "lodashn",
+      "lodashs",
+      "lodsah",
+      "lodsh",
+      "odash",
+      "oldash"
+    ],
+    "present_in_our_lockfile": []
+  },
+  "pg": {
+    "variants_checked": 29,
+    "published_lookalikes_found": [
+      "g",
+      "gp",
+      "p",
+      "pga",
+      "pgb",
+      "pgc",
+      "pge",
+      "pgk",
+      "pgl",
+      "pgm",
+      "pgn",
+      "pgo",
+      "pgp",
+      "pgq",
+      "pgr",
+      "pgs",
+      "pgt",
+      "pgu",
+      "pgx"
+    ],
+    "present_in_our_lockfile": []
+  },
+  "zod": {
+    "variants_checked": 31,
+    "published_lookalikes_found": [
+      "od",
+      "zd",
+      "zdo",
+      "zo",
+      "zodn",
+      "zodx"
+    ],
+    "present_in_our_lockfile": []
+  },
+  "dotenv": {
+    "variants_checked": 37,
+    "published_lookalikes_found": [
+      "dotenvi",
+      "dotenvr",
+      "dotenvs",
+      "dotenvy",
+      "dotevn"
+    ],
+    "present_in_our_lockfile": []
+  }
+}
