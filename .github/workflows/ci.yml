@@ -53,6 +53,44 @@ jobs:
         with:
           config-path: gitleaks-custom.toml
 
+  sca:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (blocking gate, Project 2 scope)
+        run: npm audit --audit-level=high
+
+  scorecard-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run OpenSSF Scorecard
+        uses: ossf/scorecard-action@v2.4.0
+        with:
+          results_file: scorecard-results.json
+          results_format: json
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enforce minimum score threshold
+        run: |
+          SCORE=$(jq '.score' scorecard-results.json)
+          echo "Scorecard overall score: $SCORE"
+          MIN_SCORE=5.0
+          if (( $(echo "$SCORE < $MIN_SCORE" | bc -l) )); then
+            echo "Scorecard score $SCORE is below minimum threshold $MIN_SCORE — failing build."
+            exit 1
+          fi
+
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
   # DevSecOps project in this track adds its own real stage here, SAST
