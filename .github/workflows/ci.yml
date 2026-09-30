@@ -171,6 +171,18 @@ jobs:
             -o fulcio_retry_response.json
           cat fulcio_retry_response.json
 
+      - name: Retry Fulcio request with PEM-format public key
+        run: |
+          TOKEN=$(cat oidc-token.txt)
+          SIG=$(cat signature.b64)
+          # Read the PEM file and JSON-escape its newlines
+          PUBKEY_PEM=$(python3 -c "import json,sys; print(json.dumps(open('ephemeral-pub.pem').read()))")
+          curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
+            -H "Content-Type: application/json" \
+            -d "{\"credentials\":{\"oidcIdentityToken\":\"$TOKEN\"},\"publicKeyRequest\":{\"publicKey\":{\"algorithm\":\"PKIX_ECDSA_P256_SHA_256\",\"content\":$PUBKEY_PEM},\"proofOfPossession\":\"$SIG\"}}" \
+            -o fulcio_retry_response.json
+          cat fulcio_retry_response.json
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
