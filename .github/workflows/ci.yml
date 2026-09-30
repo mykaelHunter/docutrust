@@ -127,6 +127,11 @@ jobs:
           subject-name: ${{ steps.image.outputs.repo }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+      
+      - name: Attempt to read the OIDC token request context
+        run: |
+          echo "Token URL var present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
+          echo "Token var present: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
 
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
