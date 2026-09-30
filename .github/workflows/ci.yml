@@ -143,11 +143,15 @@ jobs:
           openssl ec -in ephemeral-key.pem -pubout -outform DER -out ephemeral-pub.der
           base64 -w0 ephemeral-pub.der > ephemeral-pub.b64
 
-      - name: Decode token and extract subject claim (fixed)
+      - name: Decode token and extract subject claim
         run: |
-          TOKEN=$(cat oidc-token.txt)
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r .value)
+          echo "$TOKEN" > oidc-token.txt
+          # JWT payload is the middle base64url segment
           echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq . > token-claims.json || \
           echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | jq . > token-claims.json
+          cat token-claims.json
           jq -j .sub token-claims.json > subject.txt   # -j = raw output, no trailing newline
 
       - name: Sign the subject claim
