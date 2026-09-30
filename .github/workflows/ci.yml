@@ -194,12 +194,22 @@ jobs:
           echo "Token URL var present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
           echo "Token var present: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
 
-      - name: Plant a marker file (Run A)
+      - name: Check for marker from a previous run (Run B)
         run: |
-          echo "planted-at-$(date -u +%s)-run-$(( RANDOM % 100000 ))" > /tmp/ephemeral-test-marker.txt
-          echo "$HOME/.ephemeral-test-marker" > "$HOME/.ephemeral-test-marker"
-          cat /tmp/ephemeral-test-marker.txt
-          echo "Marker planted. Runner hostname: $(hostname)"
+          echo "Runner hostname: $(hostname)"
+          if [ -f /tmp/ephemeral-test-marker.txt ]; then
+            echo "MARKER FOUND — this would indicate state persisted across runs:"
+            cat /tmp/ephemeral-test-marker.txt
+            exit 1
+          else
+            echo "No marker found. /tmp is clean — consistent with an ephemeral, freshly provisioned runner."
+          fi
+          if [ -f "$HOME/.ephemeral-test-marker" ]; then
+            echo "HOME marker also found — unexpected persistence."
+            exit 1
+          else
+            echo "No marker in \$HOME either."
+          fi
 
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
