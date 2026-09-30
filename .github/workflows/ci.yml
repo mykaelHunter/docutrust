@@ -194,6 +194,13 @@ jobs:
           echo "Token URL var present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
           echo "Token var present: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
 
+      - name: Plant a marker file (Run A)
+        run: |
+          echo "planted-at-$(date -u +%s)-run-$(( RANDOM % 100000 ))" > /tmp/ephemeral-test-marker.txt
+          echo "$HOME/.ephemeral-test-marker" > "$HOME/.ephemeral-test-marker"
+          cat /tmp/ephemeral-test-marker.txt
+          echo "Marker planted. Runner hostname: $(hostname)"
+
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
   # DevSecOps project in this track adds its own real stage here, SAST
