@@ -167,7 +167,7 @@ jobs:
           SIG=$(cat signature.b64)
           curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
             -H "Content-Type: application/json" \
-            -d "{\"credentials\":{\"oidcIdentityToken\":\"$TOKEN\"},\"publicKeyRequest\":{\"publicKey\":{\"algorithm\":\"ECDSA\",\"content\":\"$PUBKEY\"},\"proofOfPossession\":\"$SIG\"}}" \
+            -d "{\"credentials\":{\"oidcIdentityToken\":\"$TOKEN\"},\"publicKeyRequest\":{\"publicKey\":{\"algorithm\":\"PKIX_ECDSA_P256_SHA_256\",\"content\":\"$PUBKEY\"},\"proofOfPossession\":\"$SIG\"}}" \
             -o fulcio_retry_response.json
           cat fulcio_retry_response.json
 
