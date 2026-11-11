@@ -37,6 +37,22 @@ All three were confirmed against the same digest in one terminal session (SIGNAT
 
 Full reasoning is in `verification-policy.md`. Use the exact identity, never `.*`.
 
+## Rekor transparency log entry
+
+| Field | Value |
+|---|---|
+| Log index | `3806130094` |
+| UUID | `108e9186e8c5677aae78522b9c31f9f9bb078baa0f2b5bdcd3cb46a986132b47fd24945f2a9a1199` |
+| Integrated time | 2026-11-11 08:16:44 UTC (Unix 1794385004) |
+| Entry type | hashedrekord (plain Cosign signature) |
+| Entry hash | `90476f717c7cd466357533b1efb241b93876da7923251e579018178974225808` |
+
+The entry hash equals the `.sig` layer digest shown by `cosign tree`, which ties this public log record to the signature on the signed digest. Fetched with `rekor-cli get --log-index 3806130094 --format json`.
+
+## SBOM content check
+
+The decoded SBOM attestation lists `lodash 4.18.1`, matching `package-lock.json`. This is the patched version from Project 2, so the signed SBOM carries it as a verifiable claim. Project 6 can use it for the GUAC query.
+
 ## Test results Project 6 builds on
 
 | Test | Result |
@@ -53,8 +69,7 @@ Full reasoning is in `verification-policy.md`. Use the exact identity, never `.*
 |---|---|
 | Cosign in CI (signing and attesting) | v2.4.1 (`sigstore/cosign-installer@v3`, `cosign-release: v2.4.1`) |
 | Cosign locally, verification | v2.4.1 (`/tmp/cosign2`) for the evidence screenshots; v3.1.4 also installed |
-| Syft | **fill in from the CI log, step "Generate SBOM from the built image" (`syft version`)** |
-| Rekor entry | **fill in the log index from the CI line `tlog entry created with index: <n>`** |
+| Syft | v1.42.3 (commit 860126c6, built 2026-03-19, linux/amd64, SPDX output via `-o spdx-json`) |
 
 ## Findings worth carrying forward
 
