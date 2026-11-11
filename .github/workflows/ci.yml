@@ -93,12 +93,13 @@ jobs:
 
   provenance:
     needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write        # required — lets the job request a short-lived OIDC token
-      attestations: write    # required — lets the job publish the attestation
-      packages: write        # required — pushing to GHCR
+      id-token: write        # OIDC token for Fulcio (keyless) and attestations
+      attestations: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -121,95 +122,46 @@ jobs:
           push: true
           tags: ${{ steps.image.outputs.repo }}:${{ github.sha }}
 
-      - name: Attempt to exfiltrate/reuse the OIDC token
-        run: |
-          echo "Attempting to fetch a raw OIDC token directly..."
-          curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" -o token_response.json
-          cat token_response.json
-          echo "---"
-          echo "Attempting to reuse this token against Fulcio directly, outside the attest action..."
-          curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
-            -H "Content-Type: application/json" \
-            -d '{"credentials":{"oidcIdentityToken":"'"$(jq -r .value token_response.json)"'"}}' \
-            -o fulcio_response.json || true
-          cat fulcio_response.json
-
-      - name: Generate ephemeral keypair
-        run: |
-          openssl ecparam -genkey -name prime256v1 -noout -out ephemeral-key.pem
-          openssl ec -in ephemeral-key.pem -pubout -out ephemeral-pub.pem
-          # DER-encode the public key, base64 it for the Fulcio request
-          openssl ec -in ephemeral-key.pem -pubout -outform DER -out ephemeral-pub.der
-          base64 -w0 ephemeral-pub.der > ephemeral-pub.b64
-
-      - name: Decode token and extract subject claim
-        run: |
-          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r .value)
-          echo "$TOKEN" > oidc-token.txt
-          # JWT payload is the middle base64url segment
-          echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq . > token-claims.json || \
-          echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | jq . > token-claims.json
-          cat token-claims.json
-          jq -j .sub token-claims.json > subject.txt   # -j = raw output, no trailing newline
-
-      - name: Sign the subject claim
-        run: |
-          openssl dgst -sha256 -sign ephemeral-key.pem -out signature.der subject.txt
-          base64 -w0 signature.der > signature.b64
-
-      - name: Retry Fulcio request with proof of possession
-        run: |
-          TOKEN=$(cat oidc-token.txt)
-          PUBKEY=$(cat ephemeral-pub.b64)
-          SIG=$(cat signature.b64)
-          curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
-            -H "Content-Type: application/json" \
-            -d "{\"credentials\":{\"oidcIdentityToken\":\"$TOKEN\"},\"publicKeyRequest\":{\"publicKey\":{\"algorithm\":\"PKIX_ECDSA_P256_SHA_256\",\"content\":\"$PUBKEY\"},\"proofOfPossession\":\"$SIG\"}}" \
-            -o fulcio_retry_response.json
-          cat fulcio_retry_response.json
-
-      - name: Retry Fulcio request with PEM-format public key
-        run: |
-          TOKEN=$(cat oidc-token.txt)
-          SIG=$(cat signature.b64)
-          # Read the PEM file and JSON-escape its newlines
-          PUBKEY_PEM=$(python3 -c "import json,sys; print(json.dumps(open('ephemeral-pub.pem').read()))")
-          curl -s -X POST https://fulcio.sigstore.dev/api/v2/signingCert \
-            -H "Content-Type: application/json" \
-            -d "{\"credentials\":{\"oidcIdentityToken\":\"$TOKEN\"},\"publicKeyRequest\":{\"publicKey\":{\"algorithm\":\"PKIX_ECDSA_P256_SHA_256\",\"content\":$PUBKEY_PEM},\"proofOfPossession\":\"$SIG\"}}" \
-            -o fulcio_retry_response.json
-          cat fulcio_retry_response.json
-
-      - name: Attest build provenance
+      - name: Attest build provenance (Project 4)
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ${{ steps.image.outputs.repo }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-      
-      - name: Attempt to read the OIDC token request context
-        run: |
-          echo "Token URL var present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-          echo "Token var present: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
 
-      - name: Check for marker from a previous run (Run B)
+      # ---------- Project 5 ----------
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.4.1'
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Sign image (keyless, by digest)
         run: |
-          echo "Runner hostname: $(hostname)"
-          if [ -f /tmp/ephemeral-test-marker.txt ]; then
-            echo "MARKER FOUND — this would indicate state persisted across runs:"
-            cat /tmp/ephemeral-test-marker.txt
-            exit 1
-          else
-            echo "No marker found. /tmp is clean — consistent with an ephemeral, freshly provisioned runner."
-          fi
-          if [ -f "$HOME/.ephemeral-test-marker" ]; then
-            echo "HOME marker also found — unexpected persistence."
-            exit 1
-          else
-            echo "No marker in \$HOME either."
-          fi
+          cosign version
+          cosign sign --yes ${{ steps.image.outputs.repo }}@${{ steps.push.outputs.digest }}
+
+      - name: Generate SBOM from the built image
+        run: |
+          syft version
+          syft ${{ steps.image.outputs.repo }}@${{ steps.push.outputs.digest }} -o spdx-json=sbom.spdx.json
+          grep -c '"name"' sbom.spdx.json
+
+      - name: Attest SBOM (keyless)
+        run: |
+          cosign attest --yes --type spdxjson --predicate sbom.spdx.json \
+            ${{ steps.image.outputs.repo }}@${{ steps.push.outputs.digest }}
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-spdx
+          path: sbom.spdx.json
+
+      - name: Print digest for the record
+        run: echo "IMAGE DIGEST ${{ steps.push.outputs.digest }}"
 
   # Every stage below this line is a deliberate placeholder. This is the
   # baseline pipeline the shared DocuTrust codebase ships with, each
