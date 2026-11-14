@@ -2,7 +2,7 @@ name: Continuous Fuzzing
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # nightly, 02:00 UTC (default branch only)
+    - cron: "*/15 * * * *"   # TEMPORARY, revert to "0 2 * * *" after capture
   workflow_dispatch:       # manual trigger, for testing only
 
 permissions:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FUZZ_SECONDS: 600       # time budget per run (see Deliverable 9)
+  FUZZ_SECONDS: 60        # TEMPORARY, revert to 600
 
 jobs:
   fuzz:
@@ -37,7 +37,13 @@ jobs:
       - name: Replay known crash inputs
         shell: bash
         run: |
-          for f in fuzz/regression/*; do
+          shopt -s nullglob
+          files=(fuzz/regression/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::fuzz/regression/ is empty. The known crash input must be committed."
+            exit 1
+          fi
+          for f in "${files[@]}"; do
             echo "Replaying $f"
             npx jazzer fuzz/searchQuery.fuzz.js --sync -- "$f"
           done
@@ -50,7 +56,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: corpus
-          key: fuzz-corpus-${{ github.run_id }}
+          key: fuzz-corpus-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             fuzz-corpus-
 
@@ -81,7 +87,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: corpus
-          key: fuzz-corpus-${{ github.run_id }}
+          key: fuzz-corpus-${{ github.run_id }}-${{ github.run_attempt }}
 
       # --- Triage ---------------------------------------------------------
       - name: Upload crash artifacts
