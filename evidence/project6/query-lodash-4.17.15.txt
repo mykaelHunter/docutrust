@@ -1,0 +1,27 @@
+{"level":"info","ts":1794484366.8398488,"caller":"logging/logger.go:79","msg":"Logging at info level","guac-version":"v1.1.0"}
++----------------------------------------------------------------------+
+| Package Name Nodes                                                   |
++-----------+-----------+----------------------------------------------+
+| NODE TYPE | NODE ID # | ADDITIONAL INFORMATION                       |
++-----------+-----------+----------------------------------------------+
+| hasSrcAt  | 45478     | Source: git+https://github.com/lodash/lodash |
++-----------+-----------+----------------------------------------------+
+Visualizer url: http://localhost:3000/?path=4093,97,21,45478
++-------------------------------------------------------------------------+
+| Package Version Nodes                                                   |
++--------------+-----------+----------------------------------------------+
+| NODE TYPE    | NODE ID # | ADDITIONAL INFORMATION                       |
++--------------+-----------+----------------------------------------------+
+| certifyVuln  | 54621     | vulnerability ID: ghsa-29mw-wpgm-hmr9        |
+| certifyVuln  | 54622     | vulnerability ID: ghsa-35jh-r3h4-6jhm        |
+| certifyVuln  | 54623     | vulnerability ID: ghsa-p6mc-m468-83gw        |
+| certifyVuln  | 54624     | vulnerability ID: ghsa-r5fr-rjxr-66jc        |
+| certifyVuln  | 54625     | vulnerability ID: ghsa-xxjr-mmjv-4gpg        |
++--------------+-----------+----------------------------------------------+
+| certifyLegal | 54606     | Declared License: MIT,                       |
+|              |           | Discovered License: NOASSERTION,             |
+|              |           | Origin: file:///./docutrust.prefix.spdx.json |
++--------------+-----------+----------------------------------------------+
+| hasSBOM      | 54610     | SBOM Download Location: deps.dev             |
++--------------+-----------+----------------------------------------------+
+Visualizer url: http://localhost:3000/?path=53928,4093,97,21,54621,54622,54623,54624,54625,54610,54606

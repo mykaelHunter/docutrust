@@ -1,0 +1,28 @@
+{"level":"info","ts":1794484366.667969,"caller":"logging/logger.go:79","msg":"Logging at info level","guac-version":"v1.1.0"}
++----------------------------------------------------------------------+
+| Package Name Nodes                                                   |
++-----------+-----------+----------------------------------------------+
+| NODE TYPE | NODE ID # | ADDITIONAL INFORMATION                       |
++-----------+-----------+----------------------------------------------+
+| hasSrcAt  | 45478     | Source: git+https://github.com/lodash/lodash |
++-----------+-----------+----------------------------------------------+
+Visualizer url: http://localhost:3000/?path=4093,97,21,45478
++---------------------------------------------------------------------------+
+| Package Version Nodes                                                     |
++--------------+-----------+------------------------------------------------+
+| NODE TYPE    | NODE ID # | ADDITIONAL INFORMATION                         |
++--------------+-----------+------------------------------------------------+
+| hasSrcAt     | 40084     | Source: git+https://lodash/lodash              |
++--------------+-----------+------------------------------------------------+
+| certifyVuln  | 38984     | vulnerability ID: novuln                       |
++--------------+-----------+------------------------------------------------+
+| certifyLegal | 38663     | Declared License: MIT,                         |
+|              |           | Discovered License: NOASSERTION,               |
+|              |           | Origin: file:///./docutrust.attested.spdx.json |
+| certifyLegal | 40687     | Declared License: CC0-1.0 AND MIT,             |
+|              |           | Discovered License: MIT AND MIT AND CC0-1.0,   |
+|              |           | Origin: clearlydefined                         |
++--------------+-----------+------------------------------------------------+
+| hasSBOM      | 45479     | SBOM Download Location: deps.dev               |
++--------------+-----------+------------------------------------------------+
+Visualizer url: http://localhost:3000/?path=4094,4093,97,21,40084,38984,45479,38663,40687

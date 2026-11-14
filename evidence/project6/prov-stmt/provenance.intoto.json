@@ -1,0 +1,48 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "ghcr.io/mykaelhunter/docutrust",
+      "digest": {
+        "sha256": "660c1bc2a8327e8c83787a53c0f149251a6a52f79f5342ef6220361a40cbbac4"
+      }
+    }
+  ],
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+      "externalParameters": {
+        "workflow": {
+          "ref": "refs/heads/main",
+          "repository": "https://github.com/mykaelHunter/docutrust",
+          "path": ".github/workflows/ci.yml"
+        }
+      },
+      "internalParameters": {
+        "github": {
+          "event_name": "push",
+          "repository_id": "1336944283",
+          "repository_owner_id": "6595875",
+          "runner_environment": "github-hosted"
+        }
+      },
+      "resolvedDependencies": [
+        {
+          "uri": "git+https://github.com/mykaelHunter/docutrust@refs/heads/main",
+          "digest": {
+            "gitCommit": "27dd9b0244c64f921027a13d6f8c1aa274b52d0a"
+          }
+        }
+      ]
+    },
+    "runDetails": {
+      "builder": {
+        "id": "https://github.com/mykaelHunter/docutrust/.github/workflows/ci.yml@refs/heads/main"
+      },
+      "metadata": {
+        "invocationId": "https://github.com/mykaelHunter/docutrust/actions/runs/42985663469/attempts/1"
+      }
+    }
+  }
+}

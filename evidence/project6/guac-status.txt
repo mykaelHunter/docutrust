@@ -1,0 +1,2 @@
+NAME                STATUS              CONFIG FILES
+guac-demo           running(6)          /home/mykaelhunter/guac-demo/guac-demo-compose.yaml
