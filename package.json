@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
-    "fuzz": "npx jazzer fuzz/searchQuery.fuzz.js"
+    "fuzz": "npx jazzer fuzz/searchQuery.fuzz.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

@@ -32,10 +32,14 @@ function parseSearchQuery(input) {
     }
 
     if (ch === '"') {
-      // Naive: assumes a closing quote always exists.
       const closeIndex = input.indexOf('"', i + 1);
-      const phrase = input.slice(i + 1, closeIndex); // no bounds check if closeIndex is -1
-      tokens.push({ type: "phrase", value: phrase });
+      if (closeIndex === -1) {
+        // Unclosed quote: treat the rest of the input as the phrase and
+        // stop. Cursor MUST advance past the end, never back to 0.
+        tokens.push({ type: "phrase", value: input.slice(i + 1) });
+        break;
+      }
+      tokens.push({ type: "phrase", value: input.slice(i + 1, closeIndex) });
       i = closeIndex + 1;
       continue;
     }
