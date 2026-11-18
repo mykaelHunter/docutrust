@@ -2,7 +2,7 @@ name: Continuous Fuzzing
 
 on:
   schedule:
-    - cron: "11,26,41,56 * * * *"   # TEMPORARY
+    - cron: "0 2 * * *"   # nightly, 02:00 UTC (default branch only)
   workflow_dispatch:       # manual trigger, for testing only
 
 permissions:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FUZZ_SECONDS: 60        # TEMPORARY, revert to 600
+  FUZZ_SECONDS: 600       # time budget per run (see Deliverable 9)
 
 jobs:
   fuzz:
