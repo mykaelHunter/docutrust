@@ -28,3 +28,10 @@ test("text after an unclosed quote is not parsed as separate tokens", { timeout:
     { type: "phrase", value: "b c" },
   ]);
 });
+
+test("phrase-prefix: short phrase followed by * parses", () => {
+  assert.deepStrictEqual(
+    parseSearchQuery('"quarterly rep"*').map((t) => [t.type, t.value]),
+    [["phrase-prefix", "quarterly rep"]]
+  );
+});

@@ -15,6 +15,8 @@
  * fuzzing exists to catch and manual review commonly misses. Project 7's
  * job is to let the fuzzer find it for real, then fix it.
  */
+const KEY_WIDTH = 32;
+
 function parseSearchQuery(input) {
   if (typeof input !== "string") {
     throw new TypeError("query must be a string");
@@ -39,8 +41,19 @@ function parseSearchQuery(input) {
         tokens.push({ type: "phrase", value: input.slice(i + 1) });
         break;
       }
-      tokens.push({ type: "phrase", value: input.slice(i + 1, closeIndex) });
+      const phrase = input.slice(i + 1, closeIndex);
       i = closeIndex + 1;
+
+      // Phrase-prefix match, e.g. "quarterly rep"*  (new feature).
+      // The index stores fixed-width keys, so pad the phrase to KEY_WIDTH.
+      if (input[i] === "*") {
+        const key = phrase + " ".repeat(KEY_WIDTH - phrase.length);
+        tokens.push({ type: "phrase-prefix", value: phrase, key });
+        i++;
+        continue;
+      }
+
+      tokens.push({ type: "phrase", value: phrase });
       continue;
     }
 
