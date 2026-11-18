@@ -2,7 +2,7 @@ name: Continuous Fuzzing
 
 on:
   schedule:
-    - cron: "7,22,37,52 * * * *"   # TEMPORARY
+    - cron: "11,26,41,56 * * * *"   # TEMPORARY
   workflow_dispatch:       # manual trigger, for testing only
 
 permissions:
