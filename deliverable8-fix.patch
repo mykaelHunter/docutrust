@@ -1,0 +1,11 @@
+--- a/src/lib/searchQuery.js
++++ b/src/lib/searchQuery.js
+@@ -47,7 +47,7 @@
+       // Phrase-prefix match, e.g. "quarterly rep"*  (new feature).
+       // The index stores fixed-width keys, so pad the phrase to KEY_WIDTH.
+       if (input[i] === "*") {
+-        const key = phrase + " ".repeat(KEY_WIDTH - phrase.length);
++        const key = phrase.slice(0, KEY_WIDTH).padEnd(KEY_WIDTH);
+         tokens.push({ type: "phrase-prefix", value: phrase, key });
+         i++;
+         continue;

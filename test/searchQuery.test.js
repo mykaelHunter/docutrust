@@ -35,3 +35,22 @@ test("phrase-prefix: short phrase followed by * parses", () => {
     [["phrase-prefix", "quarterly rep"]]
   );
 });
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+test("regression: phrase longer than KEY_WIDTH followed by * does not throw (Project 7 D8)", () => {
+  const input = '"' + "x".repeat(40) + '"*';
+  const tokens = parseSearchQuery(input);
+  assert.strictEqual(tokens[0].type, "phrase-prefix");
+  assert.strictEqual(tokens[0].value, "x".repeat(40));
+  assert.strictEqual(tokens[0].key.length, 32);
+});
+
+test("every committed fuzz regression input parses without throwing", { timeout: 5000 }, () => {
+  const dir = path.join(__dirname, "..", "fuzz", "regression");
+  for (const f of fs.readdirSync(dir)) {
+    const input = fs.readFileSync(path.join(dir, f)).toString();
+    assert.doesNotThrow(() => parseSearchQuery(input), f);
+  }
+});

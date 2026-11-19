@@ -1,0 +1,110 @@
+name: Continuous Fuzzing
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # TEMPORARY, revert to "0 2 * * *" after capture
+  workflow_dispatch:       # manual trigger, for testing only
+
+permissions:
+  contents: read
+  issues: write            # needed by the triage step to open an issue
+
+concurrency:
+  group: continuous-fuzzing
+  cancel-in-progress: false
+
+env:
+  FUZZ_SECONDS: 60        # TEMPORARY, revert to 600
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Unit tests + replay of every known crashing input (regression gate)
+      - name: Unit tests
+        run: npm test
+
+      - name: Replay known crash inputs
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(fuzz/regression/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::fuzz/regression/ is empty. The known crash input must be committed."
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            echo "Replaying $f"
+            npx jazzer fuzz/searchQuery.fuzz.js --sync -- "$f"
+          done
+
+      # --- Corpus persistence -------------------------------------------
+      # Caches are immutable per key, so the key is unique per run and
+      # restore-keys picks up the most recent corpus from earlier runs.
+      - name: Restore corpus
+        id: corpus-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: corpus
+          key: fuzz-corpus-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            fuzz-corpus-
+
+      - name: Corpus status before fuzzing
+        shell: bash
+        run: |
+          mkdir -p corpus crashes
+          echo "Cache restored from key: '${{ steps.corpus-restore.outputs.cache-matched-key }}'"
+          echo "Corpus files BEFORE: $(ls corpus | wc -l)"
+
+      # --- The fuzz run ---------------------------------------------------
+      - name: Fuzz
+        shell: bash   # bash + pipefail so a crash fails the step even with tee
+        run: |
+          npx jazzer fuzz/searchQuery.fuzz.js corpus --sync -- \
+            -max_total_time=${FUZZ_SECONDS} -timeout=5 -max_len=4096 \
+            -artifact_prefix=crashes/ -print_final_stats=1 2>&1 | tee fuzz.log
+
+      - name: Corpus status after fuzzing
+        if: always()
+        shell: bash
+        run: |
+          echo "Corpus files AFTER: $(ls corpus | wc -l)"
+
+      # Save even when the fuzz step failed, so progress is never lost.
+      - name: Save corpus
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: corpus
+          key: fuzz-corpus-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # --- Triage ---------------------------------------------------------
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes
+          path: |
+            crashes/
+            fuzz.log
+          if-no-files-found: warn
+
+      - name: Open triage issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Fuzzing failure: ${{ github.run_id }}" \
+            --body "The scheduled fuzzing run failed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Download the fuzz-crashes artifact and follow FUZZING.md."
